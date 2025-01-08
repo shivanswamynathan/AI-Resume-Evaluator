@@ -415,17 +415,7 @@ if submit:
                 graph = graph_builder.compile()
                 final_state = graph.invoke(config)
 
-                # Display section scores in expanders for each resume
-                with st.expander(f"**{uploaded_file.name}**", expanded=True):
-                    # Heading for the resume
-                    st.write(f"### **Resume:** {uploaded_file.name}")
-                
-                    # Loop through the individual scores and display them
-                    for section, score in final_state["individual_scores"].items():
-                        st.write(f"**{section}:** {score}")
                     
-
-
                 resumes_for_ranking += f"Resume {uploaded_file.name}:\n{final_state['individual_scores']}\n\n"
         
             # Rank resumes using LLM
