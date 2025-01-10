@@ -11,6 +11,7 @@ import io
 import time
 import plotly.express as px
 import pandas as pd
+st.set_page_config(layout="wide")
 
 # Load environment variables
 load_dotenv()
@@ -46,7 +47,7 @@ def skill_analysis(state, resume_text):
     Job Description: {state['job_description']}
     """
     try:
-        response = genai.GenerativeModel('gemini-1.5-flash').generate_content(prompt)
+        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
         breakdown = response.text.strip()
         state.setdefault("individual_scores", {})["Skills Match"] = breakdown
     except Exception as e:
@@ -75,7 +76,7 @@ def project_analysis(state, resume_text):
     Job Description: {state['job_description']}
     """
     try:
-        response = genai.GenerativeModel('gemini-1.5-flash').generate_content(prompt)
+        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
         breakdown = response.text.strip()
         state.setdefault("individual_scores", {})["Project Analysis"] = breakdown
     except Exception as e:
@@ -104,84 +105,72 @@ def experience_analysis(state, resume_text):
     Job Description: {state['job_description']}
     """
     try:
-        response = genai.GenerativeModel('gemini-1.5-flash').generate_content(prompt)
+        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
         breakdown = response.text.strip()
         state.setdefault("individual_scores", {})["Experience Analysis"] = breakdown
     except Exception as e:
         state.setdefault("individual_scores", {})["Experience Analysis"] = f"Error: {str(e)}"
 
-
 def rewrite_suggestions(state, resume_text):
     prompt = f"""
-    You are a professional resume evaluator and writer. Your task is to analyze the provided resume and job description to identify areas needing improvement. Focus on rewriting and restructuring weak sections for clarity, impact, and alignment with the job description. Use a professional and concise tone in your feedback.
+    You are a highly skilled resume writer and editor specializing in crafting impactful and professional resumes. 
+    Your task is to evaluate the provided resume text and suggest improvements for clarity, grammar, alignment with the job description, and overall effectiveness. Focus on enhancing poorly explained sections, ensuring relevance to the target job, and optimizing for readability and professional presentation.
 
-    ### Resume Rewriting and Suggestions
+    ### Key Guidelines:
+    1. **Education Section**:
+        - Highlight the most relevant academic qualifications for the job.
+        - Ensure reverse chronological order, including details like institution name, degree type, major/minor, graduation year, and special recognitions (e.g., honors, scholarships).
+        - Include online courses or certifications only if they are relevant to the job description.
 
-    1. **Profile Summary**:
-        - Highlight strengths and achievements concisely.
-        - Combine redundant or repetitive statements into impactful summaries.
-        - Ensure alignment with the job description using relevant keywords.
+    2. **Experience Section**:
+        - Emphasize specific achievements and quantifiable results (e.g., "Increased sales by 25% in Q4").
+        - Clearly describe roles and responsibilities using action verbs and avoiding vague terms.
+        - Align experiences with skills and competencies highlighted in the job description.
 
-    2. **Technical Skills**:
-        - Organize skills into logical categories (e.g., Programming, Data Visualization).
-        - Highlight proficiency levels and any certifications.
-        - Avoid generic terms; specify tools, technologies, and techniques.
+    3. **Skills Section**:
+    - Distinguish between hard and soft skills. Prioritize technical skills relevant to the job.
+    - Use concise language to present expertise (e.g., "5 years of Python experience; created software available on GitHub").
 
-    3. **Projects**:
-        - Rewrite project descriptions to emphasize quantifiable impacts and technical skills.
-        - Use action verbs and focus on alignment with the job description.
-        - Avoid verbose descriptions; include relevant details about tools, techniques, and outcomes.
+    4. **Project Section**:
+   - Highlight key projects, especially those relevant to the job description.
+   - Include clear objectives, tools/technologies used, methodologies, and measurable outcomes (e.g., "Developed a machine learning model with 95% accuracy to predict customer churn").
+   - Focus on demonstrating problem-solving skills and technical expertise through projects.
 
-    4. **Certifications**:
-        - Condense verbose explanations.
-        - Mention only the certification name and the issuing organization.
+    5. **Leadership & Activities**:
+    - Include significant contributions or leadership roles in personal or extracurricular activities.
+    - Link these experiences to transferable skills relevant to the job.
 
-    5. **Education**:
-        - Ensure consistent formatting.
-        - Add missing details like location and full degree names.
+    6. **Formatting & Readability**:
+    - Maintain professional formatting: concise bullet points, clear sections, and clean fonts.
+    - Avoid excessive wordiness; focus on presenting key details succinctly.
 
-    6. **General Improvements**:
-        - Correct grammar, spelling, and formatting inconsistencies.
-        - Suggest removing irrelevant sections (e.g., Address or Date of Birth).
-        - Add or reorganize sections to improve readability and relevance.
-
-    ### Formatting Guidelines:
-    - If the original resume content is written in **points**, provide rewritten suggestions in points. 
-    - If the original content is written in **paragraphs**, provide rewritten suggestions in paragraph form. 
-    - Ensure the output format aligns with the input style (e.g., points for points, paragraphs for paragraphs).
-    - For new suggestions or additional content, maintain consistency with the resume's existing style.
-
-    ### Output Format:
-    Please provide your rewrite suggestions in the following Markdown table format:
-
-    | Section | Before | After | Explanation |
-    |---|---|---|---|
-    | Profile Summary | *Original text goes here* | *Rewritten text goes here* | *Reason for changes* | 
-    | Technical Skills | *Original text goes here* | *Rewritten text goes here* | *Reason for changes* | 
-    | Projects | *Original text goes here* | *Rewritten text goes here* | *Reason for changes* |
-
-    # ... (other sections) ...
-    
-    **Important considerations when constructing the table:**
-    - Ensure all table cells are enclosed in single backticks (`).
-    - If the original resume content has line breaks, preserve them in the `Before` column.
-    - In the `After` and `Explanation` columns, use concise language and avoid unnecessary line breaks.
-    - Maintain consistent spacing and alignment between columns.
-
-    Please follow this format to ensure compatibility with `pandas.read_html()`.
-
+    ### Instructions:
+    Analyze the following resume text and the provided job description to suggest improvements. Rewrite sections where necessary to enhance clarity, alignment, and professionalism. Provide your suggestions in the specified table format.
 
     **Resume:** {resume_text}
     **Job Description:** {state['job_description']}
+
+    ### Output Format:
+    Provide suggestions in a Markdown table with the following structure:
+
+    | Section           | Before                        | After                         | Explanation                     |
+    |-------------------|------------------------------|------------------------------|---------------------------------|
+    | *Section Name*   | *Original text goes here*   | *Rewritten text goes here*  | *Reason for changes*          |
+    | *Section Name*   | *Original text goes here*   | *Rewritten text goes here*  | *Reason for changes*          |
+    | ...             | ...                          | ...                          | ...                            |
+
+    ### Notes:
+    - Ensure the suggestions are professional, concise, and ATS-friendly.
+    - Tailor each rewrite to make the resume more appealing to the specific job description.
+    - Retain the original formatting style (e.g., bullet points) where appropriate.
     """
 
     try:
-        response = genai.GenerativeModel('gemini-1.5-flash').generate_content(prompt)
-        suggestions = response.text.strip()
-        state.setdefault("individual_scores", {})["Rewrite Suggestions"] = suggestions
+        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
+        suggestions_table = response.text.strip()
+        state.setdefault("individual_scores", {})["Rewrite Suggestions"] = suggestions_table
     except Exception as e:
         state.setdefault("individual_scores", {})["Rewrite Suggestions"] = f"Error: {str(e)}"
-
 
 def rank_resumes_with_llm(resumes_for_ranking, jd):
     prompt = f"""
@@ -248,15 +237,10 @@ def rank_resumes_with_llm(resumes_for_ranking, jd):
     """
     
     try:
-        response = genai.GenerativeModel('gemini-1.5-flash').generate_content(prompt)
+        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
         return response.text.strip()
     except Exception as e:
         return f"Error: {str(e)}"
-
-def clean_llm_output(llm_output):
-    llm_output = re.sub(r'<br>', '', llm_output) # Remove <br> tags 
-    llm_output = re.sub(r'^\*\*|\*\*$', '', llm_output, flags=re.MULTILINE) # Remove ** from start and end of lines
-    return llm_output
     
 # Streamlit App
 st.markdown("""
@@ -322,6 +306,10 @@ st.markdown("""
             border-radius: 8px;
             margin-bottom: 20px;
             padding: 20px;
+        
+        .main {
+           max-width: 1200px; /* Adjust the width as needed */
+           margin: 0 auto;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -382,43 +370,16 @@ if submit:
             final_state = graph.invoke(config)
 
             # Display section scores and overall score in expanders for single resume
-            #with st.expander(f"**{uploaded_file.name}**", expanded=True):
-                #st.write(f"### **Resume:** {uploaded_file.name}")
-            for section, score in final_state["individual_scores"].items():
-                    if section == "Skills Match":
-                        with st.expander("Skills Analysis", expanded=False):
-                            st.write(f"**{section}:**")
-                            st.write(score)  # Display text content for Skills Analysis
+            st.write(f"### **Resume:** {uploaded_file.name}")  # Resume filename as a heading
+            
+            # Individual Expanders for Sections:
+            for section in ["Skills Match", "Project Analysis", "Experience Analysis"]:
+                with st.expander(section):  
+                    st.write(final_state["individual_scores"][section])
 
-                    elif section == "Project Analysis":
-                        with st.expander("Project Analysis", expanded=False):
-                            st.write(f"**{section}:**")
-                            st.write(score)  # Display text content for Project Analysis
-
-                    elif section == "Experience Analysis":
-                        with st.expander("Experience Analysis", expanded=False):
-                            st.write(f"**{section}:**")
-                            st.write(score)  # Display text content for Experience Analysis
-
-                    elif section == "Rewrite Suggestions":
-        # Directly display the table or raw output, no expander here
-                        try:
-                            cleaned_output = clean_llm_output(score)  # Clean the LLM output
-                            if "<table>" in cleaned_output:
-                # Convert HTML table to DataFrame
-                                df = pd.read_html(cleaned_output, flavor='bs4')[0]
-                
-                # Render the table inline
-                                st.dataframe(df, width=1200, height=600)
-                            else:
-                                st.write("No valid table found. Displaying raw output:")
-                                st.write(cleaned_output)
-                        except Exception as e:
-                            st.warning(f"Error parsing rewrite suggestions into a table: {e}")
-                            st.write(score)  # Display raw LLM output as fallback
-
-                    
-
+            # Rewrite Suggestions Table:
+            st.write("### Rewrite Suggestions:")
+            st.markdown(final_state["individual_scores"]["Rewrite Suggestions"], unsafe_allow_html=True)
                 
         else :
             resume_scores = []
@@ -444,6 +405,7 @@ if submit:
             
                 graph = graph_builder.compile()
                 final_state = graph.invoke(config)
+
                     
                 resumes_for_ranking += f"Resume {uploaded_file.name}:\n{final_state['individual_scores']}\n\n"
         
