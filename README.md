@@ -53,7 +53,9 @@ This project is an AI-powered resume evaluator built using Python and Streamlit.
 
 ### 1.  Launching the Application:
 -Follow the setup instructions to install libraries, obtain an API key, and create the .env file.
+
 -Run the application using the command: streamlit run your_script_name.py.
+
 -This will open the AI Resume Evaluator application in your web browser.
 
 ## 2. Providing a Job Description:
