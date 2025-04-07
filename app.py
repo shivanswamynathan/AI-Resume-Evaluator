@@ -28,218 +28,222 @@ class State(TypedDict):
         scores: Annotated[list, "Add messages"]
         individual_scores: dict
 
-def profile_summary_analysis(state, resume_text):
-    prompt = f"""
-    Analyze the profile summary of the resume and provide brief, focused feedback (maximum 500 words):
-
-    ### Current Summary Analysis
-    [Brief description of current summary - 2-3 sentences]
-
-    ### Key Strengths 
-    - [Focus on most impactful elements (2-3 points)]
-
-    ### Critical Improvements Needed 
-    - [List only the most important changes needed (2-3 points)]
-
-    ### Quick Recommendations
-    [2-3 specific, actionable suggestions]
-
-    Resume: {resume_text}
-    Job Description: {state['job_description']}
-
-    Keep the entire response under 500 words.
-    """
-    try:
-        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
-        state.setdefault("individual_scores", {})["Profile Summary"] = response.text.strip()
-    except Exception as e:
-        state.setdefault("individual_scores", {})["Profile Summary"] = f"Error: {str(e)}"
-
-def experience_analysis(state, resume_text):
-    prompt = f"""
-    Analyze the experience section of the resume against the job description and provide feedback in the following format (maximum 500 words):
-
-    ### Experience Analysis Evaluation Table
-    | Section | Score | Explanation |
-    |---------|--------|-------------|
-    | Relevance to JD | [Score]% | Match with job requirements |
-    | Coverage of Essential Experience | [Score]% | Assessment of required experience |
-    | Specificity and Impact | [Score]% | Detail and measurable achievements |
-    | Level of Expertise | [Rating]/5 | Demonstrated expertise level |
-    | Overall Experience Match Score | [Score]% | Final experience evaluation |
-
-    ### Critical Gaps 
-    - [List only the most important missing experience (2-3 points)]
-
-    ### Key Pattern Suggestions 
-    Consider these patterns (do not rewrite) (2-3 examples):
-    - "Action + Task + Tools + Outcome" example
-    - Second pattern example if needed
-
-    ### Priority Improvements 
-    - [Focus on highest-impact changes (2-3 points)]
-
-    Resume: {resume_text}
-    Job Description: {state['job_description']}
-
-    Keep the entire response under 500 words.
-    """
-    try:
-        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
-        breakdown = response.text.strip()
-        state.setdefault("individual_scores", {})["Experience Analysis"] = breakdown
-    except Exception as e:
-        state.setdefault("individual_scores", {})["Experience Analysis"] = f"Error: {str(e)}"
-
-
-def education_analysis(state, resume_text):
-    prompt = f"""
-    Provide concise feedback on the education section (maximum 500 words):
-
-    ### Quick Assessment
-    [2-3 sentences on overall education section]
-
-    ### Key Strengths 
-    - [List most relevant educational qualifications (2-3 points)]
-
-    ### Essential Improvements 
-    - [Focus on critical missing elements (2-3 points)]
-
-    ### Priority Recommendations
-    [2-3 specific suggestions for improvement]
-
-    Resume: {resume_text}
-    Job Description: {state['job_description']}
-
-    Keep the entire response under 500 words.
-    """
-    try:
-        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
-        state.setdefault("individual_scores", {})["Education Analysis"] = response.text.strip()
-    except Exception as e:
-        state.setdefault("individual_scores", {})["Education Analysis"] = f"Error: {str(e)}"
-
-
-
 def skill_analysis(state, resume_text):
-    prompt = f"""
-    Analyze the skills section of the resume against the job description and provide feedback in the following format (maximum 500 words):
-
-    ### Skills Match Evaluation Table
-    | Section | Score | Explanation |
-    |---------|--------|-------------|
-    | Relevance to JD | [Score]% | Analysis of direct skills match |
-    | Specificity and Depth | [Score]% | Assessment of skills description detail |
-    | Relevance to Role and Industry | [Score]% | Alignment with industry requirements |
-    | Level of Expertise | [Rating]/5 | Overall expertise demonstrated |
-    | Overall Skills Match Score | [Score]% | Composite skills assessment |
-
-    ### Critical Gaps 
-    - [List only the most important missing skills (3-4 points)]
-
-    ### Key Recommendations 
-    - [Focus on highest-impact improvements (2-3 points)]
-
-    Resume: {resume_text}
-    Job Description: {state['job_description']}
-
-    Keep the entire response under 500 words.
+        prompt = f"""
+        You are a highly skilled resume evaluator tasked with analyzing the relevance and quality of skills listed in a resume against a job description (JD).
+        Evaluate the skills based on the following criteria:
+        **Skills Match Evaluation**
+        1. Relevance to JD: [Score]%
+            - **Matched Skills**: List all explicitly mentioned skills in the resume that match the JD, including specific technologies, frameworks, and methodologies (use commas for separation).
+            - **Missing Skills**: Identify essential skills, technologies, or qualifications mentioned in the JD that are absent or underrepresented in the resume (use commas for separation).
+        2. Specificity and Depth: [Score]%
+            - **Description**: Evaluate how specifically and thoroughly the skills are described. Include details like experience level, proficiency, and usage in context (e.g., "Advanced Python programming with 5 years of experience").
+        3. Relevance to Role and Industry: [Score]%
+            - **Description**: Assess how well the listed skills align with the role and industry requirements outlined in the JD, with a focus on industry-standard tools and methodologies.
+        4. Level of Expertise: [Rating]/5
+            - **Description**: Rate the proficiency and expertise demonstrated in each skill listed on the resume (e.g., beginner, intermediate, advanced). Provide reasoning based on the description in the resume.
+        5. Overall Skills Match Score: [Score]% 
+            - **Summary**: Provide a concise overview of the resume’s skills match against the JD, noting strengths and areas for improvement.
+        Resume: {resume_text}
+        Job Description: {state['job_description']}
+        ### Output Format:
+        | Section                          | Score    | Explanation                                                                                               |
+        |----------------------------------|----------|-----------------------------------------------------------------------------------------------------------|
+        | **Skills Match Evaluation**      | [Score]% | Matched Skills:                                                                                           |
+        |                                  |          | *List of matched skills*                                                                                 |
+        |                                  |          | Missing Skills:                                                                                           |
+        |                                  |          | *List of missing skills*                                                                                 |
+        | **Specificity and Depth**        | [Score]% | *Detailed description of how well the skills are described (e.g., experience level, proficiency).*        |
+        | **Relevance to Role and Industry** | [Score]% | *Explanation of how the skills align with the role and industry requirements.*                           |
+        | **Level of Expertise**           | [Rating]/5 | *Assessment of the proficiency level of each skill (e.g., beginner, intermediate, advanced).*            |
+        | **Overall Skills Match Score**   | [Score]% | *Concise summary of the skills match against the JD with strengths and areas for improvement.*           |
     """
-    try:
-        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
-        breakdown = response.text.strip()
-        state.setdefault("individual_scores", {})["Skills Match"] = breakdown
-    except Exception as e:
-        state.setdefault("individual_scores", {})["Skills Match"] = f"Error: {str(e)}"
+        try:
+            response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
+            breakdown = response.text.strip()
+            state.setdefault("individual_scores", {})["Skills Match"] = breakdown
+        except Exception as e:
+            state.setdefault("individual_scores", {})["Skills Match"] = f"Error: {str(e)}"
 
 def project_analysis(state, resume_text):
-    prompt = f"""
-    Analyze the projects section of the resume against the job description and provide feedback in the following format (maximum 500 words):
+        prompt = f"""
+        You are an experienced resume evaluator specializing in assessing the relevance and quality of projects listed in a resume against a job description (JD).
+        Evaluate the match based on the following criteria:
+        **Project Analysis Evaluation**
+        1. Relevance to JD: [Score]%
+            - **Matched Projects**: List the projects from the resume that are directly relevant to the JD requirements, emphasizing key aspects that match the role (one line).
+            - **Missing Projects**: Identify project types or experiences that are mentioned in the JD but are missing or underrepresented in the resume (one line).
+        2. Coverage of Essential Project Experience: [Score]%
+            - **Description**: Assess how well the listed projects cover the critical requirements and responsibilities of the JD. Mention any key projects that should be highlighted in the resume to better align with the JD (one line).
+        3. Specificity and Detail: [Score]%
+            - **Description**: Evaluate the level of detail provided about the projects, including outcomes, measurable results, and relevant technologies used (one line).
+        4. Level of Expertise: [Rating]/5
+            - **Description**: Rate the expertise demonstrated in the projects. Consider the complexity, scale, and impact of each project described in the resume (e.g., beginner, intermediate, advanced) (one line).
+        5. Overall Project Match Score: [Score]%
+            - **Summary**: Summarize the overall match between the resume’s listed projects and the JD, highlighting key strengths and areas for improvement (one line).
+        Resume: {resume_text}
+        Job Description: {state['job_description']}
+        ### Output Format:
+        | Section                          | Score    | Explanation                                                                                               |
+        |----------------------------------|----------|-----------------------------------------------------------------------------------------------------------|
+        | **Project Analysis Evaluation**  | [Score]% | Matched Projects:                                                                                        |
+        |                                  |          | *List of matched projects*                                                                               |
+        |                                  |          | Missing Projects:                                                                                        |
+        |                                  |          | *List of missing projects*                                                                               |
+        | **Coverage of Essential Project Experience** | [Score]% | *Detailed assessment of how well the projects cover the JD’s critical requirements and responsibilities.* |
+        | **Specificity and Detail**       | [Score]% | *Evaluation of the detail level about projects, including outcomes, results, and technologies used.*      |
+        | **Level of Expertise**           | [Rating]/5 | *Rating of the expertise demonstrated in the projects, considering complexity, scale, and impact.*       |
+        | **Overall Project Match Score**  | [Score]% | *Summary of the overall project match with the JD, noting strengths and areas for improvement.*          |
+        """
+        try:
+            response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
+            breakdown = response.text.strip()
+            state.setdefault("individual_scores", {})["Project Analysis"] = breakdown
+        except Exception as e:
+            state.setdefault("individual_scores", {})["Project Analysis"] = f"Error: {str(e)}"
 
-    ### Project Analysis Evaluation Table
-    | Section | Score | Explanation |
-    |---------|--------|-------------|
-    | Relevance to JD | [Score]% | Projects' alignment with requirements |
-    | Coverage of Essential Project Experience | [Score]% | Assessment of project scope coverage |
-    | Specificity and Detail | [Score]% | Level of detail in project descriptions |
-    | Level of Expertise | [Rating]/5 | Technical complexity demonstrated |
-    | Overall Project Match Score | [Score]% | Final project evaluation |
-
-    ### Missing Project Types 
-    - [List only essential missing projects (2-3 most critical)]
-
-    ### Key Pattern Suggestions 
-    Consider these patterns (do not rewrite) (2-3 examples):
-    - "Action + Task + Tools + Outcome" example
-    - Second pattern example if needed
-
-    ### Priority Improvements 
-    - [List highest-impact changes needed (2-3 points)]
-
-    Resume: {resume_text}
-    Job Description: {state['job_description']}
-
-    Keep the entire response under 500 words.
-    """
-    try:
-        response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
-        breakdown = response.text.strip()
-        state.setdefault("individual_scores", {})["Project Analysis"] = breakdown
-    except Exception as e:
-        state.setdefault("individual_scores", {})["Project Analysis"] = f"Error: {str(e)}"
-
+def experience_analysis(state, resume_text):
+        prompt = f"""
+        You are a professional resume evaluator tasked with analyzing the experience section of a resume against a job description (JD).
+        Evaluate the match based on the following criteria:
+        **Experience Analysis Evaluation**
+        1. Relevance to JD: [Score]%
+            - **Matched Experience**: Highlight specific experiences that directly align with the JD, showcasing how the candidate's past roles meet the JD’s requirements (one line).
+            - **Missing Experience**: Identify critical experiences mentioned in the JD that are absent from the resume or inadequately covered (one line).
+        2. Coverage of Essential Experience: [Score]%
+            - **Description**: Evaluate how well the experience section covers the critical aspects of the JD, including job responsibilities, leadership roles, and skills (one line).
+        3. Specificity and Impact: [Score]%
+            - **Description**: Assess the specificity of the descriptions of each role, including measurable achievements and contributions (e.g., “Increased sales by 20%” or “Managed a team of 10 developers”) (one line).
+        4. Level of Expertise: [Rating]/5
+            - **Description**: Rate the expertise demonstrated in the experience section, considering the complexity of tasks performed and the level of responsibility (e.g., beginner, intermediate, advanced) (one line).
+        5. Overall Experience Match Score: [Score]%
+            - **Summary**: Provide an overall evaluation of how well the experience section aligns with the JD, noting strengths and areas for improvement (one line).
+        Resume: {resume_text}
+        Job Description: {state['job_description']}
+        
+        ### Output Format:
+        | Section                          | Score    | Explanation                                                                                               |
+        |-----------------------------------|----------|-----------------------------------------------------------------------------------------------------------|
+        | **Experience Analysis Evaluation**| [Score]% | Matched Experience:                                                                                       |
+        |                                   |          | *List of matched experiences*                                                                             |
+        |                                   |          | Missing Experience:                                                                                       |
+        |                                   |          | *List of missing experiences*                                                                             |
+        | **Coverage of Essential Experience** | [Score]% | *Evaluation of how well the experience section covers the JD’s critical aspects, like responsibilities.*  |
+        | **Specificity and Impact**       | [Score]% | *Assessment of the specificity of role descriptions, including measurable achievements and contributions.* |
+        | **Level of Expertise**           | [Rating]/5 | *Rating of the expertise demonstrated in the experience section, considering task complexity and responsibility.* |
+        | **Overall Experience Match Score** | [Score]% | *Summary of the overall experience match with the JD, noting strengths and areas for improvement.*         |
+        """
+        try:
+            response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
+            breakdown = response.text.strip()
+            state.setdefault("individual_scores", {})["Experience Analysis"] = breakdown
+        except Exception as e:
+            state.setdefault("individual_scores", {})["Experience Analysis"] = f"Error: {str(e)}"
 
 def rewrite_suggestions(state, resume_text):
         prompt = f"""
-        You are a highly skilled resume writer and editor. Your task is to analyze the provided resume text and suggest improvements for clarity, grammar, and relevance.
-        Rewrite poorly explained sections to make them more impactful and aligned with the job description (JD). Use the "Expected Sentence Structure" for consistency across all sections.
-
-        **Rewrite Guidelines by Section**:
-
-        1. **Profile Summary**:
-        - Ensure it is concise, uses strong action verbs, and highlights key skills, experience, and achievements.
-        - Expected Sentence Structure:
-            "Accomplished [Job Title/Professional], skilled in [Core Skills/Tools], with [Years of Experience] in [Industry/Domain]. Proven ability to [Specific Achievement/Impact] using [Tools/Technologies]. Seeking to [Career Goal/Objective]."
-
-        2. **Skills Section**:
-        - Recommend organizing skills into categories (e.g., Programming Languages, Tools, Frameworks).
-        - Use the sentence structure:
-            "Proficient in [Skill/Technology], experienced with [Tool/Framework], and familiar with [Additional Skills]."
-
-        3. **Experience Section**:
-        - Rewrite vague descriptions using measurable outcomes and specific tools. Use the structure:
-            "Action Verb + Task/Feature + Tools/Technology + Measurable Outcome."
-        - Example: "Implemented a machine learning pipeline using Python and TensorFlow, reducing data processing time by 30% and improving model accuracy by 15%."
-
-        4. **Projects Section**:
-        - Focus on outcomes, technologies, and measurable impacts. Use the structure:
-            "Action Verb + Feature/Task + Tools/Technology + Measurable Outcome."
-        - Example: "Developed a recommendation engine using Python and Scikit-learn, increasing user engagement by 25%."
-
-        5. **Education Section**:
-        - Verify completeness (degree, institution, year, relevant coursework).
-        - Example: "Master’s in Data Science, XYZ University, 2022. Relevant Coursework: Machine Learning, Deep Learning, Big Data Analytics."
-
-        6. **Achievements/Certifications**:
-        - Ensure certifications and awards are relevant, recent, and properly formatted.
-        - Example: "Certified Machine Learning Specialist, Coursera, 2023."
-
-        **Example Rewriting:**
-
-        **Before:** "Worked on data visualization."
-        **After:** "Designed interactive dashboards using Tableau, enabling actionable insights for business teams."
-        **Reason for Change:** The rewrite adds specific tools, quantifiable outcomes, and aligns the task with job-related keywords.
-
-        **Resume:** {resume_text}
-        **Job Description:** {state['job_description']}
-
-        **Output Format:**
-        ## Section Name: [e.g., Education, Experience, Skills]
-        ### Original Text: [Provide the original resume text, if present]
-        ### Suggested Rewrite: [Provide the improved text]
-        ### Explanation: [Explain why the change was made and how it improves the resume]
-
-        Ensure all suggestions are professional, concise, and tailored to the JD. Skip sections not present in the resume.
+        You are a highly skilled resume writer and editor. Your task is to analyze the provided resume text and suggest improvements for clarity, grammar, and relevance. Focus on rewriting poorly explained sections to make them more impactful and aligned with the job description (JD).
+        **Resume Rewriting and Suggestions**
+        1. **Education Section**: 
+        - Identify if the Education Section exists. If it does, then
+        - Identify any missing details (e.g., school name, degree, year of graduation, honors).
+        - Ensure the section is in reverse chronological order.
+        - Suggest improvements for readability, consistency, and relevance to the job description.
+        2. **Experience Section**:
+         - Identify if the Experience Section exists. If it does, then
+        - Highlight vague or generic phrases and rewrite them with quantifiable achievements or results (e.g., "Increased sales by 20%").
+        - Use action verbs and relevant industry keywords from the job description to align with the role.
+        - Emphasize skills and accomplishments that are most important for the job.
+         Provide one example for all the changes.
+         If Experience Section does not exist, then return "Section not present in original resume" under Before Text.
+        3. **Skills Section**:
+         - Identify if the Skills Section exists. If it does, then
+        - Suggest ways to organize technical and soft skills effectively.
+        - Recommend showcasing proficiency levels or certifications where applicable.
+        - Ensure the skills match the key requirements in the job description.
+         Provide one example for all the changes.
+        If Skills Section does not exist, then return "Section not present in original resume" under Before Text.
+        4. **Project Section**:
+        - Identify if the Project Section exists. If it does, then
+        - Highlight key projects that are most relevant to the job description.
+        - Include clear objectives, tools/technologies used, methodologies, and measurable outcomes (e.g., "Developed a machine learning model with 95% accuracy to predict customer churn").
+        - Focus on demonstrating problem-solving skills and technical expertise through projects.
+        - Ensure that each project description is concise, impactful, and aligned with the job role.
+         Provide one example for all the changes.
+         If Project Section does not exist, then return "Section not present in original resume" under Before Text.
+        5. **General Improvements**:
+        - Provide grammar corrections, clarity improvements, and formatting suggestions.
+        - Suggest reordering or adding new sections if relevant to the job description (e.g., Certifications, Publications, Professional Development).
+        - Ensure the resume is ATS-friendly by avoiding overly complex formatting, jargon, or non-standard elements.
+       
+        **Example**:
+            **Before** from experience section: "Worked on data analysis."
+            **After** from experience section: "Conducted a thorough analysis of sales data using SQL and Python which led to a strategic improvement in sales strategy by 15%."
+            **Reasoning** from experience section: The "After" text provides quantifiable improvements and adds specifics to the type of analysis that was performed and how it impacted the business by adding a business metric.
+         
+            **Before** from Skills section: "Python, SQL, Machine Learning."
+            **After** from Skills section: "Programming Languages: Python, SQL (Proficient); Machine Learning (Intermediate)."
+            **Reasoning** from Skills section: Added proficiency levels and categorized skills.
+        
+            **Before** from Project section: "Developed a customer segmentation."
+            **After** from Project section: "Implemented K-means clustering to segment customers based on their annual income and spending score which resulted in an increase in customer satisfaction by 10%."
+            **Reasoning** from Project section: Specified the methodology, the tools used and the business metric that was improved.
+        
+        **Resume**: {resume_text}
+        **Job Description**: {state['job_description']}
+        
+        ### Output Format:
+        
+        Provide your analysis in the following EXACT format, including all section headers and subheaders:
+        
+        ## EDUCATION SECTION
+        ### Before Text:
+        [Extract and quote the exact education section text]
+        ### After Text:
+        [Provide the rewritten version]
+        ### Reasoning:
+        [Explain the improvements made]
+        
+        ## EXPERIENCE SECTION      
+        ### Before Text:
+        [If Experience Section does not exist, then return "Section not present in original resume"]
+        ### After Text:
+        [Provide the rewritten version if Experience Section exists]
+         ### Reasoning:
+        [Explain the improvements made if Experience Section exists]
+        
+        ## SKILLS SECTION
+        ### Before Text:
+        [If Skills Section does not exist, then return "Section not present in original resume"]
+        ### After Text:
+        [Provide the rewritten version if Skills Section exists]
+         ### Reasoning:
+        [Explain the improvements made if Skills Section exists]
+        
+        ## PROJECTS SECTION
+        ### Before Text:
+        [If Project Section does not exist, then return "Section not present in original resume"]
+        ### After Text:
+        [Provide the rewritten version if Project Section exists]
+        ### Reasoning:
+        [Explain the improvements made if Project Section exists]
+        
+        ## General Improvements
+        ### Grammar/Clarity Suggestions:
+        -[List of specific improvements made for grammar and clarity]
+        ### Formatting Suggestions:
+        -[List of formatting changes or additions for better readability or ATS-friendliness]
+        ### Additional Suggestions:
+        -[Any other improvements, such as reordering sections or adding missing information]
+        
+        IMPORTANT GUIDELINES:
+        1. Always maintain this exact format with these exact headers
+        2. Always include all sections even if the original resume lacks them
+        3. For missing sections, indicate "Section not present in original resume" under Before Text.
+        4. Use bullet points consistently as shown above
+        5. Keep suggestions specific and actionable
+        6. Focus on alignment with the provided job description
+        7. Include quantifiable achievements where possible
         """
         try:
             response = genai.GenerativeModel('gemini-2.0-flash-exp').generate_content(prompt)
@@ -257,7 +261,7 @@ def rank_resumes_with_llm(resumes_for_ranking, jd):
         **Resumes:**
         {resumes_for_ranking}
         **Output Format:**
-        Create a table with the following columns:
+        Provide a **Markdown table** with the following columns:
         - **Rank**: The ranking position of the resume.
         - **Resume Name**: The name of the resume file.
         - **Overall Score (%)**: The overall score for the resume's match to the JD.
@@ -268,11 +272,11 @@ def rank_resumes_with_llm(resumes_for_ranking, jd):
         
         | Rank | Resume Name       | Overall Score (%) | Skills Score (%) | Projects Score (%) | Experience Score (%) |
         |------|-------------------|-------------------|------------------|--------------------|----------------------|
-        | 1    | Resume1.pdf       | 92                | 90               | 88                 | 96                   | 
+        | 1    | Resume1.pdf       | 92                | 90               | 88                 | 96                   |
         | 2    | Resume2.pdf       | 85                | 83               | 80                 | 92                   |
         | 3    | Resume3.pdf       | 65                | 70               | 65                 | 60                   |
-        | 4    | Resume4.pdf       | 74                | 82               | 69                 | 73                   |
-        | 5    | Resume5.pdf       | 85                | 80               | 83                 | 92                   | 
+ 
+
         Ensure the table is well-structured and easy to understand. Use markdown or plain text formatting for the table.
         
         **Criteria for Scoring and Ranking:**
@@ -439,11 +443,11 @@ with st.sidebar:
         jd_options = ["Data Analyst", "Frontend Developer", "Backend Developer", "Full-stack Developer", "AI Engineer"]
         selected_jd = st.selectbox("Select Benchmark Job Description:", jd_options)
         jd_file_path = {
-            "Data Analyst": r"F:\Entrans\New folder\Resume evaluator\JD\data analyst jd.txt",
-            "Frontend Developer": r"F:\Entrans\New folder\Resume evaluator\JD\frontend developer jd.txt",
-            "Backend Developer": r"F:\Entrans\New folder\Resume evaluator\JD\back end developer jd.txt",
-            "Full-stack Developer": r"F:\Entrans\New folder\Resume evaluator\JD\full stack developer jd.txt",
-            "AI Engineer": r"F:\Entrans\New folder\Resume evaluator\JD\ai engineer jd.txt"
+            "Data Analyst": r"data analyst jd.txt",
+            "Frontend Developer": r"frontend developer jd.txt",
+            "Backend Developer": r"back end developer jd.txt",
+            "Full-stack Developer": r"full stack developer jd.txt",
+            "AI Engineer": r"ai engineer jd.txt"
         }[selected_jd]
         with open(jd_file_path, "r",encoding="utf-8", errors="ignore") as f:
             jd = f.read()
@@ -472,20 +476,16 @@ if submit:
                 graph_builder = StateGraph(State)
 
                 # Add nodes
-                graph_builder.add_node("profile_summary_analysis", partial(profile_summary_analysis, resume_text=resume_text))
-                graph_builder.add_node("experience_analysis", partial(experience_analysis, resume_text=resume_text))
-                graph_builder.add_node("education_analysis", partial(education_analysis, resume_text=resume_text))
                 graph_builder.add_node("skill_analysis", partial(skill_analysis, resume_text=resume_text))
                 graph_builder.add_node("project_analysis", partial(project_analysis, resume_text=resume_text))
+                graph_builder.add_node("experience_analysis", partial(experience_analysis, resume_text=resume_text))
                 graph_builder.add_node("rewrite_suggestions", partial(rewrite_suggestions, resume_text=resume_text))
 
                 # Define graph flow
-                graph_builder.set_entry_point("profile_summary_analysis")
-                graph_builder.add_edge("profile_summary_analysis", "experience_analysis")
-                graph_builder.add_edge("experience_analysis", "education_analysis")
-                graph_builder.add_edge("education_analysis", "skill_analysis")
+                graph_builder.set_entry_point("skill_analysis")
                 graph_builder.add_edge("skill_analysis", "project_analysis")
-                graph_builder.add_edge("project_analysis", "rewrite_suggestions")
+                graph_builder.add_edge("project_analysis", "experience_analysis")
+                graph_builder.add_edge("experience_analysis", "rewrite_suggestions")
 
                 graph = graph_builder.compile()
                 final_state = graph.invoke(config)
@@ -494,21 +494,16 @@ if submit:
                     st.markdown(f"#### 📄 {uploaded_files[0].name}")
                     
                     # Create tabs for different analyses
-                    tabs = st.tabs(["Profile Summary", "Experience", "Education", "Skills", "Projects", "Suggestions"])
+                    tabs = st.tabs(["Skills", "Projects", "Experience", "Suggestions"])
                     
                     with tabs[0]:
-                        st.markdown(final_state["individual_scores"]["Profile Summary"])
-                    with tabs[1]:
-                        st.markdown(final_state["individual_scores"]["Experience Analysis"])
-                    with tabs[2]:
-                        st.markdown(final_state["individual_scores"]["Education Analysis"])
-                    with tabs[3]:
                         st.markdown(final_state["individual_scores"]["Skills Match"])
-                    with tabs[4]:
+                    with tabs[1]:
                         st.markdown(final_state["individual_scores"]["Project Analysis"])
-                    with tabs[5]:
+                    with tabs[2]:
+                        st.markdown(final_state["individual_scores"]["Experience Analysis"])
+                    with tabs[3]:
                         st.markdown(final_state["individual_scores"]["Rewrite Suggestions"])
-
                     
             else :
                 resume_scores = []
@@ -521,19 +516,15 @@ if submit:
                     graph_builder = StateGraph(State)
 
                     # Add nodes
-                    graph_builder.add_node("profile_summary_analysis", partial(profile_summary_analysis, resume_text=resume_text))
-                    graph_builder.add_node("experience_analysis", partial(experience_analysis, resume_text=resume_text))
-                    graph_builder.add_node("education_analysis", partial(education_analysis, resume_text=resume_text))
                     graph_builder.add_node("skill_analysis", partial(skill_analysis, resume_text=resume_text))
                     graph_builder.add_node("project_analysis", partial(project_analysis, resume_text=resume_text))
+                    graph_builder.add_node("experience_analysis", partial(experience_analysis, resume_text=resume_text))
                 
                 
                     # Define graph flow
-                    graph_builder.set_entry_point("profile_summary_analysis")
-                    graph_builder.add_edge("profile_summary_analysis", "experience_analysis")
-                    graph_builder.add_edge("experience_analysis", "education_analysis")
-                    graph_builder.add_edge("education_analysis", "skill_analysis")
+                    graph_builder.set_entry_point("skill_analysis")
                     graph_builder.add_edge("skill_analysis", "project_analysis")
+                    graph_builder.add_edge("project_analysis", "experience_analysis")
                     
                 
                     graph = graph_builder.compile()
