@@ -1,115 +1,123 @@
 # AI Resume Evaluator : https://huggingface.co/spaces/ainerd11/ai_resume_evaluator
 
 
-## Project Overview
-This project is an AI-powered resume evaluator built using Python and Streamlit. It leverages Google's Gemini large language model (LLM) to analyze resumes against job descriptions, providing detailed feedback and rankings.
+# AI Resume Evaluator
 
-## Key Features
-- **Resume Analysis**: Provides an in-depth evaluation of resumes, focusing on skills, projects, and experience. It identifies areas of strength and weakness in comparison to the job description.
-- **Resume Ranking**: Ranks multiple resumes based on their relevance to the job description, streamlining the candidate selection process.
-- **Rewrite Suggestions**: Offers actionable suggestions to improve resumes, focusing on clarity, grammar, and alignment with the job description.
-- **User-Friendly Interface**: Designed with Streamlit for an intuitive web application accessible to both recruiters and job seekers.
+## 📄 Overview
+AI Resume Evaluator is a Streamlit-based web application that uses Google's Generative AI (Gemini) to analyze and evaluate resumes against job descriptions. The application helps job seekers optimize their resumes and assists recruiters in ranking multiple candidates efficiently.
 
-## Technical Details
 
-### 1. Libraries and Dependencies
-- **PyPDF2**: Extracts text from PDF resumes for analysis.
-- **Streamlit**: Powers the interactive web interface for user input and results display.
-- **google-generativeai**: Connects to Google's Gemini LLM for advanced natural language processing and analysis.
-- **langgraph**: Manages the workflow of resume evaluation using a directed acyclic graph (DAG).
-- **dotenv**: Loads environment variables securely, including the Gemini API key.
-- **functools**: Simplifies function management with `partial` for pre-filling arguments.
-- **typing**: Enhances code clarity with type annotations like `TypedDict` and `Annotated`.
+## ✨ Features
+- **Single Resume Analysis**: Detailed evaluation of a resume against a job description
+  - Skills match analysis
+  - Project relevance analysis
+  - Experience evaluation
+  - Rewrite suggestions for improvement
+- **Multiple Resume Ranking**: Compare and rank multiple resumes against a job description
+- **Benchmark Job Descriptions**: Choose from pre-defined job descriptions for common roles
+- **Interactive UI**: User-friendly interface with tabs for different analysis components
+- **PDF Support**: Directly upload and analyze PDF resumes
 
-### 2. Core Components
-#### Analysis Functions
-- **`skill_analysis`**: Evaluates skills for relevance, depth, and proficiency based on the job description.
-- **`project_analysis`**: Assesses the alignment and quality of projects with the job requirements.
-- **`experience_analysis`**: Reviews work experience, focusing on relevance, impact, and expertise.
-- **`rewrite_suggestions`**: Provides detailed rewriting suggestions to improve the resume's content and clarity.
-- **`rank_resumes_with_llm`**: Ranks resumes based on overall relevance to the job description.
+## 🛠️ Technology Stack
+- **Frontend**: Streamlit
+- **AI Model**: Google Generative AI (Gemini 2.0 Flash)
+- **PDF Processing**: PyPDF2
+- **Workflow Orchestration**: LangGraph
+- **Environment Management**: dotenv
 
-#### State Management
-- The `State` class (`TypedDict`) organizes and stores data, ensuring smooth communication between analysis functions.
+## 🚀 Installation
 
-#### Prompt Engineering
-- Carefully crafted prompts guide Gemini to generate precise, actionable feedback for resumes.
+### Prerequisites
+- Python 3.8 or higher
+- Google Generative AI API key
 
-### 3. Workflow and Execution
-1. **Initialization**: Streamlit sets up the user interface.
-2. **Job Description Input**: Users can paste or select a job description.
-3. **Resume Upload**: Users upload PDF resumes.
-4. **Analysis Trigger**: Clicking "🚀 Analyze Resumes" starts the analysis process.
-5. **Text Extraction**: PyPDF2 extracts text from resumes for analysis.
-6. **Analysis Execution**: 
-   - Single Resume: Executes analysis functions sequentially using `langgraph`.
-   - Multiple Resumes: Processes each resume, then ranks them using Gemini.
-7. **Results Display**: Presents results in tabs for individual resumes or as a ranked list for multiple resumes.
+### Setup
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/ai-resume-evaluator.git
+   cd ai-resume-evaluator
+   ```
 
-### 4. Configuration and Environment
-- **API Key**: Stored securely in a `.env` file for interacting with the Gemini LLM.
+2. Create a virtual environment and activate it:
+   ```
+   python -m venv venv
+   # On Windows
+   venv\Scripts\activate
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
 
-## Usage Instructions
+3. Install the required dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-### 1.  Launching the Application:
--Follow the setup instructions to install libraries, obtain an API key, and create the .env file.
+4. Create a `.env` file in the root directory and add your Google API key:
+   ```
+   GOOGLE_API_KEY=your_google_api_key_here
+   ```
 
--Run the application using the command: streamlit run your_script_name.py.
+## 📋 Usage
 
--This will open the AI Resume Evaluator application in your web browser.
+1. Start the Streamlit application:
+   ```
+   streamlit run app.py
+   ```
 
-## 2. Providing a Job Description:
+2. Access the application in your web browser (typically at http://localhost:8501).
 
-In the sidebar, you'll find a section labeled **"Job Description."**
+3. In the sidebar:
+   - Input a job description by pasting it directly or selecting a benchmark JD
+   
+4. In the main panel:
+   - Upload one or more resume PDFs
+   - Click "Analyze Resumes" to start the evaluation process
 
-You have two options:
+5. View the results:
+   - For a single resume: Navigate through tabs to see skills analysis, project analysis, experience analysis, and rewrite suggestions
+   - For multiple resumes: View the ranked results table with scores and explanations
 
-- **Paste Job Description:** Directly paste the text of the job description into the text area provided.
-- **Select Benchmark JD:** Choose a pre-defined job description from the dropdown menu (e.g., Data Analyst, Frontend Developer). This option is useful for quick testing or when you want to use a standardized job description.
+## 🔄 Workflow
 
-## 3. Uploading Resumes:
+The application uses a LangGraph-powered workflow with the following stages:
+1. **Skills Analysis**: Evaluates how well the candidate's skills match the job requirements
+2. **Project Analysis**: Assesses the relevance and impact of the candidate's projects
+3. **Experience Analysis**: Analyzes work experience against job requirements
+4. **Rewrite Suggestions** (for single resume): Provides detailed recommendations for improving the resume
 
-In the main section of the application, you'll see the **"Upload Resumes"** area.
+## 📁 Project Structure
 
-- Click the **"Browse files"** button to select the PDF resume(s) you want to analyze from your computer.
-- You can upload either a single resume or multiple resumes at once.
+```
+ai-resume-evaluator/
+├── app.py                 # Main application file
+├── requirements.txt       # Dependencies
+├── .env                   # Environment variables (not in repository)
+├── benchmark_jds/         # Folder containing benchmark job descriptions
+│   ├── data_analyst.txt
+│   ├── frontend_developer.txt
+│   ├── backend_developer.txt
+│   ├── fullstack_developer.txt
+│   └── ai_engineer.txt
+└── README.md              # Project documentation
+```
 
-## 4. Initiating the Analysis:
+## ⚙️ Configuration
 
-Once you've provided a job description and uploaded resumes, click the **"🚀 Analyze Resumes"** button.
+You can customize the application by:
+- Adding more benchmark job descriptions in the benchmark_jds folder
+- Modifying the prompts in the analysis functions to adjust evaluation criteria
+- Updating the UI styling in the Streamlit CSS section
 
-- The application will begin processing the resumes and performing the analysis. This may take a few moments, depending on the complexity of the resumes and the load on the Google Gemini API.
+## 🔒 Security Considerations
 
-## 5. Reviewing the Results:
+- The application processes resume data locally and does not store any user data
+- Job descriptions and resumes are sent to Google's Generative AI for analysis
+- Ensure you follow Google's API usage policies and data protection regulations
 
-### Scenario 1: Single Resume Analysis
 
-If you uploaded one resume, the results will be presented in a structured format with separate tabs:
+## 🙏 Acknowledgements
 
-- **Skills:** This tab displays the analysis of the skills mentioned in the resume, including matched skills, missing skills, proficiency levels, and an overall score for the skills section.
-- **Projects:** This tab presents the evaluation of projects listed in the resume, highlighting relevant projects, missing project types, and an overall score for the project section.
-- **Experience:** This tab provides insights into the candidate's work experience, emphasizing alignment with the job description and areas for improvement.
-- **Suggestions:** This tab offers concrete recommendations for improving the resume, such as rewriting vague phrases, incorporating action verbs, and highlighting key achievements.
-
-### Scenario 2: Multiple Resume Ranking
-
-If you uploaded more than one resume, the application will perform a ranking analysis.
-
-The results will be displayed in a table that includes:
-
-- **Rank:** The overall ranking of each resume based on its relevance to the job description.
-- **Resume Name:** The file name of each uploaded resume.
-- **Overall Score (%):** A composite score representing the overall match of the resume to the job description.
-- **Skills Score (%):** The score for the skills section.
-- **Projects Score (%):** The score for the projects section.
-- **Experience Score (%):** The score for the experience section.
-
-In addition to the table, the application will provide explanations for the ranking, highlighting the key factors that contributed to the placement of each resume.
-
-## Important Considerations:
-
-- **Interpreting Results:** The AI-powered analysis provides valuable insights, but it's essential to remember that it is a tool to support human judgment. Carefully review the results and consider them in conjunction with your own assessment of the candidates.
-- **Privacy and Security:** Ensure that you handle resumes and job descriptions responsibly and in accordance with relevant data privacy regulations.
-
-By following these detailed usage instructions, you can effectively utilize the AI Resume Evaluator to analyze and rank resumes, making your candidate selection process more efficient and informed.
-
+- [Streamlit](https://streamlit.io/)
+- [Google Generative AI](https://ai.google.dev/)
+- [LangGraph](https://github.com/langchain-ai/langgraph)
+- [PyPDF2](https://pypdf2.readthedocs.io/)
